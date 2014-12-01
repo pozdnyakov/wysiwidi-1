@@ -26,15 +26,25 @@
 
 namespace wfd {
 
-class ContextManager;
+class MediaManager;
 
-class Source {
+class Peer {
  public:
-  static Source* Create(ContextManager* mng);
-  virtual ~Source() {}
-
+  class Delegate {
+   public:
+    virtual void SendMessage(const std::string& message) = 0;
+   protected:
+    virtual ~Delegate() {}
+  };
+  virtual ~Peer() {}
   virtual void Start() = 0;
-  virtual void RtspMessageReceived(const std::string& message) = 0;
+  virtual void MessageReceived(const std::string& message) = 0;
+};
+
+class Source : public Peer {
+ public:
+  virtual ~Source() {}
+  static Source* Create(Peer::Delegate* delegate, MediaManager* mng);
 };
 
 }

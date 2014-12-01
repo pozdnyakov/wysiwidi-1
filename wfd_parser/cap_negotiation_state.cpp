@@ -34,7 +34,7 @@ namespace wfd {
 
 class M3Handler final : public SequencedMessageSender {
  public:
-  M3Handler(ContextManager* manager, Observer* observer);
+  M3Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
 
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override;
@@ -43,15 +43,15 @@ class M3Handler final : public SequencedMessageSender {
 
 class M4Handler final : public SequencedMessageSender {
  public:
-  M4Handler(ContextManager* manager, Observer* observer);
+  M4Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
 
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override;
   virtual bool HandleReply(Reply* reply) override;
 };
 
-M3Handler::M3Handler(ContextManager* manager, Observer* observer)
-  : SequencedMessageSender(manager, observer) {
+M3Handler::M3Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+  : SequencedMessageSender(sender, manager, observer) {
 }
 
 std::unique_ptr<TypedMessage> M3Handler::CreateMessage() {
@@ -80,8 +80,8 @@ bool M3Handler::HandleReply(Reply* reply) {
   return true;
 }
 
-M4Handler::M4Handler(ContextManager* manager, Observer* observer)
-  : SequencedMessageSender(manager, observer) {
+M4Handler::M4Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+  : SequencedMessageSender(sender, manager, observer) {
 }
 
 std::unique_ptr<TypedMessage> M4Handler::CreateMessage() {
@@ -101,11 +101,11 @@ bool M4Handler::HandleReply(Reply* reply) {
   return (reply->GetResponseCode() == 200);
 }
 
-CapNegotiationState::CapNegotiationState(ContextManager* manager,
+CapNegotiationState::CapNegotiationState(Peer::Delegate* sender, MediaManager* manager,
     MessageHandler::Observer* observer)
-  : MessageSequenceHandler(manager, observer) {
-  AddSequencedHandler(new M3Handler(manager, this));
-  AddSequencedHandler(new M4Handler(manager, this));
+  : MessageSequenceHandler(sender, manager, observer) {
+  AddSequencedHandler(new M3Handler(sender, manager, this));
+  AddSequencedHandler(new M4Handler(sender, manager, this));
 }
 
 CapNegotiationState::~CapNegotiationState() {

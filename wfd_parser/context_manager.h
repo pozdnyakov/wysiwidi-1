@@ -5,16 +5,14 @@
 
 namespace wfd {
 
-class ContextManager {
+class MediaManager {
  public:  
-  virtual ~ContextManager() {}
+  virtual ~MediaManager() {}
   virtual void Play() = 0;
   virtual void Pause() = 0;
   virtual void Teardown() = 0;
   virtual bool IsPaused() const = 0;
   virtual void SetRtpPorts(int port1, int port2) = 0;
-
-  virtual void SendRtspMessage(const std::string& message) = 0;
 };
 
 }  // namespace wfd

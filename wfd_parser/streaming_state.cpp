@@ -32,8 +32,8 @@ namespace wfd {
 
 class M9Handler final : public MessageReceiver<TypedMessage::M9> {
  public:
-  M9Handler(ContextManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M9>(manager, observer) {
+  M9Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : MessageReceiver<TypedMessage::M9>(sender, manager, observer) {
   }
 
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
@@ -46,18 +46,18 @@ class M9Handler final : public MessageReceiver<TypedMessage::M9> {
     auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
     reply->header().set_cseq(message->cseq());
     manager_->Pause();
-    manager_->SendRtspMessage(reply->to_string());
+    sender_->SendMessage(reply->to_string());
     return true;
   }
 };
 
-StreamingState::StreamingState(ContextManager* manager,
+StreamingState::StreamingState(Peer::Delegate *sender, MediaManager* manager,
     MessageHandler::Observer* observer)
-  : MessageSequenceWithOptionalSetHandler(manager, observer) {
-  AddSequencedHandler(new M8Handler(manager, this));
+  : MessageSequenceWithOptionalSetHandler(sender, manager, observer) {
+  AddSequencedHandler(new M8Handler(sender, manager, this));
 
-  AddOptionalHandler(new M7Handler(manager, this));
-  AddOptionalHandler(new M9Handler(manager, this));
+  AddOptionalHandler(new M7Handler(sender, manager, this));
+  AddOptionalHandler(new M9Handler(sender, manager, this));
 }
 
 StreamingState::~StreamingState() {

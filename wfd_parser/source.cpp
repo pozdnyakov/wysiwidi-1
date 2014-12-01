@@ -70,43 +70,32 @@ std::unique_ptr<TypedMessage> CreateTypedMessage(WFD::MessagePtr message) {
   return nullptr;
 }
 
-std::vector<MessageHandler*> CreateStates(
-  ContextManager* mng, MessageHandler::Observer* observer) {
-  std::vector<MessageHandler*> states;
-  states.push_back(new InitState(mng, observer));
-  states.push_back(new CapNegotiationState(mng, observer));
-  states.push_back(new WfdSessionState(mng, observer));
-  states.push_back(new StreamingState(mng, observer));
-  return states;
 }
-
-}
-class StateMachine : public MessageSequenceHandler{
+class SourceStateMachine : public MessageSequenceHandler{
  public:
-   StateMachine(ContextManager* mng,
-                MessageHandler::Observer* observer)
-     : MessageSequenceHandler(mng, observer) {
-     AddSequencedHandler(new InitState(mng, this));
-     AddSequencedHandler(new CapNegotiationState(mng, this));
-     AddSequencedHandler(new WfdSessionState(mng, this));
-     AddSequencedHandler(new StreamingState(mng, this));
+   SourceStateMachine(Peer::Delegate* sender,
+                MediaManager* mng)
+     : MessageSequenceHandler(sender, mng, this) {
+     AddSequencedHandler(new InitState(sender, mng, this));
+     AddSequencedHandler(new CapNegotiationState(sender, mng, this));
+     AddSequencedHandler(new WfdSessionState(sender, mng, this));
+     AddSequencedHandler(new StreamingState(sender, mng, this));
    }
+   virtual void OnCompleted(MessageHandler* handler) override {}
+   virtual void OnError(MessageHandler* handler) override {}
 };
 
-class SourceImpl : public Source, public MessageHandler::Observer
+template <class T>
+class PeerImpl : public T
 {
  public:
-  explicit SourceImpl(ContextManager* mng);
-  virtual ~SourceImpl();
+  explicit PeerImpl(MessageSequenceHandler* state_machine);
+  virtual ~PeerImpl();
 
  private:
   // Source implementation.
   virtual void Start() override;
-  virtual void RtspMessageReceived(const std::string& message) override;
-
-  // MessageHandler::Observer implementation.
-  virtual void OnCompleted(MessageHandler* handler) override;
-  virtual void OnError(MessageHandler* handler) override;
+  virtual void MessageReceived(const std::string& message) override;
 
   bool GetHeader(std::string& header);
   bool GetPayload(std::string& payload, unsigned content_length);
@@ -116,22 +105,22 @@ class SourceImpl : public Source, public MessageHandler::Observer
   std::string rtsp_recieve_buffer_;
 };
 
-Source* Source::Create(ContextManager* mng) {
-  return new SourceImpl(mng);
+template <class T>
+PeerImpl<T>::PeerImpl(MessageSequenceHandler* state_machine)
+  : state_machine_(state_machine) {
 }
 
-SourceImpl::SourceImpl(ContextManager* mng)
-  : state_machine_(new StateMachine(mng, this)) {
+template <class T>
+PeerImpl<T>::~PeerImpl() {
 }
 
-SourceImpl::~SourceImpl() {
-}
-
-void SourceImpl::Start() {
+template <class T>
+void PeerImpl<T>::Start() {
   state_machine_->Start();
 }
 
-void SourceImpl::RtspMessageReceived(const std::string& message) {
+template <class T>
+void PeerImpl<T>::MessageReceived(const std::string& message) {
   rtsp_recieve_buffer_ += message;
   std::string buffer;
 
@@ -152,7 +141,8 @@ void SourceImpl::RtspMessageReceived(const std::string& message) {
   }
 }
 
-bool SourceImpl::GetHeader(std::string& header) {
+template <class T>
+bool PeerImpl<T>::GetHeader(std::string& header) {
   size_t eom = rtsp_recieve_buffer_.find("\r\n\r\n");
   if (eom == std::string::npos) {
     rtsp_recieve_buffer_.clear();
@@ -164,7 +154,8 @@ bool SourceImpl::GetHeader(std::string& header) {
   return true;
 }
 
-bool SourceImpl::GetPayload(std::string& payload, unsigned content_length) {
+template <class T>
+bool PeerImpl<T>::GetPayload(std::string& payload, unsigned content_length) {
   if (rtsp_recieve_buffer_.size() < content_length)
       return false;
 
@@ -173,7 +164,8 @@ bool SourceImpl::GetPayload(std::string& payload, unsigned content_length) {
   return true;
 }
 
-void SourceImpl::OnCompleted(MessageHandler* handler) {}
-void SourceImpl::OnError(MessageHandler* handler) {}
+Source* Source::Create(Delegate* delegate, MediaManager* mng) {
+  return new PeerImpl<Source>(new SourceStateMachine(delegate, mng));
+}
 
 }  // namespace wfd

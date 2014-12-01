@@ -34,9 +34,10 @@ namespace wfd {
 
 class M1Handler final : public SequencedMessageSender {
  public:
-  M1Handler(ContextManager* manager, Observer* observer)
-    : SequencedMessageSender(manager, observer) {
-  }
+//  M1Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+//    : SequencedMessageSender(manager, observer) {
+//  }
+    using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override {
     auto options = std::make_shared<WFD::Options>("*");
@@ -53,8 +54,8 @@ class M1Handler final : public SequencedMessageSender {
 
 class M2Handler final : public MessageReceiver<TypedMessage::M2> {
  public:
-  M2Handler(ContextManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M2>(manager, observer) {
+  M2Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : MessageReceiver<TypedMessage::M2>(sender, manager, observer) {
   }
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
     auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
@@ -68,15 +69,17 @@ class M2Handler final : public MessageReceiver<TypedMessage::M2> {
     supported_methods.push_back(WFD::TEARDOWN);
     reply->header().set_supported_methods(supported_methods);
     reply->header().set_cseq(message->message()->header().cseq());
-    manager_->SendRtspMessage(reply->to_string());
+    sender_->SendMessage(reply->to_string());
     return true;
   }
 };
 
-InitState::InitState(ContextManager* manager, MessageHandler::Observer* observer)
-  : MessageSequenceHandler(manager, observer) {
-  AddSequencedHandler(new M1Handler(manager, this));
-  AddSequencedHandler(new M2Handler(manager, this));
+InitState::InitState(Peer::Delegate* sender,
+                     MediaManager* manager,
+                     MessageHandler::Observer* observer)
+  : MessageSequenceHandler(sender, manager, observer) {
+  AddSequencedHandler(new M1Handler(sender, manager, this));
+  AddSequencedHandler(new M2Handler(sender, manager, this));
 }
 
 InitState::~InitState() {

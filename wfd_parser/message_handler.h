@@ -28,11 +28,12 @@
 #include <memory>
 #include <utility>
 
+#include "source.h"
 #include "typed_message.h"
 
 namespace wfd {
 
-class ContextManager;
+class MediaManager;
 
 class MessageHandler {
  public:
@@ -58,14 +59,16 @@ class MessageHandler {
   void set_observer(Observer* observer) { observer_ = observer; }
 
 protected:
-  MessageHandler(ContextManager* manager, Observer* observer)
-    : manager_(manager),
+  MessageHandler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : sender_(sender),
+      manager_(manager),
       observer_(observer) {
+    assert(sender);
     assert(manager);
     assert(observer);
   }
-
-  ContextManager* manager_;
+  Peer::Delegate* sender_;
+  MediaManager* manager_;
   Observer* observer_;
   // States should be handled within one thread. It's OK to have this static.
   static int send_cseq_;
@@ -74,7 +77,8 @@ protected:
 class MessageSequenceHandler : public MessageHandler,
                                public MessageHandler::Observer {
  public:
-  MessageSequenceHandler(ContextManager* manager,
+  MessageSequenceHandler(Peer::Delegate* sender,
+                         MediaManager* manager,
                          MessageHandler::Observer* observer);
   virtual ~MessageSequenceHandler();
   virtual void Start() override;
@@ -98,8 +102,8 @@ class MessageSequenceHandler : public MessageHandler,
 
 class MessageSequenceWithOptionalSetHandler : public MessageSequenceHandler {
  public:
-  MessageSequenceWithOptionalSetHandler(
-      ContextManager* manager,
+  MessageSequenceWithOptionalSetHandler(Peer::Delegate* sender,
+      MediaManager* manager,
       MessageHandler::Observer* observer);
   virtual ~MessageSequenceWithOptionalSetHandler();
   virtual void Start() override;
@@ -132,8 +136,8 @@ class MessageReceiver : public MessageHandler {
   static_assert(type != TypedMessage::Reply,
                 "MessageSender class should be used");
 
-  MessageReceiver(ContextManager* manager, Observer* observer)
-    : MessageHandler(manager, observer),
+  MessageReceiver(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : MessageHandler(sender, manager, observer),
       wait_for_message_(false) {
   }
   virtual ~MessageReceiver() {}
@@ -170,7 +174,7 @@ class MessageReceiver : public MessageHandler {
 
 class MessageSender : public MessageHandler {
  public:
-  MessageSender(ContextManager* manager, Observer* observer);
+  MessageSender(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
   virtual ~MessageSender();
 
  protected:
@@ -190,8 +194,7 @@ class MessageSender : public MessageHandler {
 template <TypedMessage::Type type>
 class TypedMessageSender : public MessageSender {
  public:
-  TypedMessageSender(ContextManager* manager, Observer* observer)
-    : MessageSender(manager, observer) {}
+  using MessageSender::MessageSender;
 
   virtual ~TypedMessageSender() {}
 
@@ -206,7 +209,7 @@ class TypedMessageSender : public MessageSender {
 // To be used for sequensed senders.
 class SequencedMessageSender : public MessageSender {
  public:
-  SequencedMessageSender(ContextManager* manager, Observer* observer);
+  SequencedMessageSender(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
   virtual ~SequencedMessageSender();
 
  protected:

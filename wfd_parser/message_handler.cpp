@@ -29,9 +29,10 @@ namespace wfd {
 int MessageHandler::send_cseq_ = 1;
 
 MessageSequenceHandler::MessageSequenceHandler(
-        ContextManager* manager,
-        MessageHandler::Observer* observer)
-  : MessageHandler(manager, observer),
+    Peer::Delegate* sender,
+    MediaManager* manager,
+    MessageHandler::Observer* observer)
+  : MessageHandler(sender, manager, observer),
     current_handler_(nullptr) {
 }
 
@@ -100,9 +101,9 @@ void MessageSequenceHandler::OnError(MessageHandler* handler) {
   observer_->OnError(this);
 }
 
-MessageSequenceWithOptionalSetHandler::MessageSequenceWithOptionalSetHandler(ContextManager* manager,
-        MessageHandler::Observer* observer)
-  : MessageSequenceHandler(manager, observer) {
+MessageSequenceWithOptionalSetHandler::MessageSequenceWithOptionalSetHandler(
+    Peer::Delegate* sender, MediaManager* manager, MessageHandler::Observer* observer)
+  : MessageSequenceHandler(sender, manager, observer) {
 }
 
 MessageSequenceWithOptionalSetHandler::~MessageSequenceWithOptionalSetHandler() {
@@ -200,8 +201,8 @@ void MessageSequenceWithOptionalSetHandler::OnError(MessageHandler* handler) {
   observer_->OnError(this);
 }
 
-MessageSender::MessageSender(ContextManager* manager, Observer* observer)
-  : MessageHandler(manager, observer) {
+MessageSender::MessageSender(Peer::Delegate *sender, MediaManager* manager, Observer* observer)
+  : MessageHandler(sender, manager, observer) {
 }
 
 MessageSender::~MessageSender() {
@@ -219,7 +220,7 @@ void MessageSender::Send(std::unique_ptr<TypedMessage> message) {
     return;
   }
   cseq_queue_.push(message->cseq()); // TODO : Add timeout check for reply.
-  manager_->SendRtspMessage(message->message()->to_string());
+  sender_->SendMessage(message->message()->to_string());
 }
 
 bool MessageSender::CanHandle(TypedMessage* message) const {
@@ -244,9 +245,9 @@ void MessageSender::Handle(std::unique_ptr<TypedMessage> message) {
   }
 }
 
-SequencedMessageSender::SequencedMessageSender(
-    ContextManager* manager, Observer* observer)
-  : MessageSender(manager, observer),
+SequencedMessageSender::SequencedMessageSender
+    (Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+  : MessageSender(sender, manager, observer),
     to_be_send_(nullptr) {
 }
 

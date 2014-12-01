@@ -33,8 +33,8 @@ namespace wfd {
 
 class M5Handler final : public SequencedMessageSender {
  public:
-  M5Handler(ContextManager* manager, Observer* observer)
-    : SequencedMessageSender(manager, observer) {
+  M5Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : SequencedMessageSender(sender, manager, observer) {
   }
 
  private:
@@ -55,8 +55,8 @@ class M5Handler final : public SequencedMessageSender {
 
 class M6Handler final : public MessageReceiver<TypedMessage::M6> {
  public:
-  M6Handler(ContextManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M6>(manager, observer) {
+  M6Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+    : MessageReceiver<TypedMessage::M6>(sender, manager, observer) {
   }
 
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
@@ -64,13 +64,13 @@ class M6Handler final : public MessageReceiver<TypedMessage::M6> {
     reply->header().set_cseq(message->cseq());
     // todo: generate unique session id
     reply->header().set_session("abcdefg123456");
-    manager_->SendRtspMessage(reply->to_string());
+    sender_->SendMessage(reply->to_string());
     return true;
   }
 };
 
-M7Handler::M7Handler(ContextManager* manager, Observer* observer)
-  : MessageReceiver<TypedMessage::M7>(manager, observer) {
+M7Handler::M7Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
+  : MessageReceiver<TypedMessage::M7>(sender, manager, observer) {
 }
 
 bool M7Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
@@ -83,30 +83,30 @@ bool M7Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
   reply->header().set_cseq(message->cseq());
   manager_->Play();
-  manager_->SendRtspMessage(reply->to_string());
+  sender_->SendMessage(reply->to_string());
   return true;
 }
 
-M8Handler::M8Handler(ContextManager* manager, Observer* observer)
-  : MessageReceiver<TypedMessage::M8>(manager, observer) {
+M8Handler::M8Handler(Peer::Delegate *sender, MediaManager* manager, Observer* observer)
+  : MessageReceiver<TypedMessage::M8>(sender, manager, observer) {
 }
 
 bool M8Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
   reply->header().set_cseq(message->cseq());
   manager_->Teardown(); // FIXME : make proper reset.
-  manager_->SendRtspMessage(reply->to_string());
+  sender_->SendMessage(reply->to_string());
   return true;
 }
 
-WfdSessionState::WfdSessionState(ContextManager* manager,
+WfdSessionState::WfdSessionState(Peer::Delegate *sender, MediaManager* manager,
     MessageHandler::Observer* observer)
-  : MessageSequenceWithOptionalSetHandler(manager, observer) {
-  AddSequencedHandler(new M5Handler(manager, this));
-  AddSequencedHandler(new M6Handler(manager, this));
-  AddSequencedHandler(new M7Handler(manager, this));
+  : MessageSequenceWithOptionalSetHandler(sender, manager, observer) {
+  AddSequencedHandler(new M5Handler(sender, manager, this));
+  AddSequencedHandler(new M6Handler(sender, manager, this));
+  AddSequencedHandler(new M7Handler(sender, manager, this));
 
-  AddOptionalHandler(new M8Handler(manager, this));
+  AddOptionalHandler(new M8Handler(sender, manager, this));
 }
 
 WfdSessionState::~WfdSessionState() {
