@@ -30,7 +30,7 @@ namespace wfd {
 // Includes M1 and M2 messages handling
 class InitState : public MessageSequenceHandler {
  public:
-  InitState(Peer::Delegate* sender, MediaManager* manager, MessageHandler::Observer* observer);
+  InitState(const InitParams& init_params);
   virtual ~InitState();
 };
 

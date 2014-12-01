@@ -73,14 +73,15 @@ std::unique_ptr<TypedMessage> CreateTypedMessage(WFD::MessagePtr message) {
 }
 class SourceStateMachine : public MessageSequenceHandler{
  public:
-   SourceStateMachine(Peer::Delegate* sender,
-                MediaManager* mng)
-     : MessageSequenceHandler(sender, mng, this) {
-     AddSequencedHandler(new InitState(sender, mng, this));
-     AddSequencedHandler(new CapNegotiationState(sender, mng, this));
-     AddSequencedHandler(new WfdSessionState(sender, mng, this));
-     AddSequencedHandler(new StreamingState(sender, mng, this));
+   SourceStateMachine(const InitParams& init_params)
+     : MessageSequenceHandler(init_params) {
+     AddSequencedHandler(new InitState(init_params));
+     AddSequencedHandler(new CapNegotiationState(init_params));
+     AddSequencedHandler(new WfdSessionState(init_params));
+     AddSequencedHandler(new StreamingState(init_params));
    }
+   SourceStateMachine(Peer::Delegate* sender, MediaManager* mng)
+     : SourceStateMachine({sender, mng, this}) {}
    virtual void OnCompleted(MessageHandler* handler) override {}
    virtual void OnError(MessageHandler* handler) override {}
 };

@@ -30,8 +30,7 @@ namespace wfd {
 // Includes M3 and M4 messages handling
 class CapNegotiationState : public MessageSequenceHandler {
  public:
-  CapNegotiationState(Peer::Delegate* sender, MediaManager* manager,
-      MessageHandler::Observer* observer);
+  CapNegotiationState(const InitParams& init_params);
   virtual ~CapNegotiationState();
 };
 

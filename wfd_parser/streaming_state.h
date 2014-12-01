@@ -30,8 +30,7 @@ namespace wfd {
 // Includes M8 message handling and optionally can handle M3, M4, M7, M9-M15
 class StreamingState : public MessageSequenceWithOptionalSetHandler {
  public:
-  StreamingState(Peer::Delegate* sender, MediaManager* manager,
-      MessageHandler::Observer* observer);
+  StreamingState(const InitParams& init_params);
   virtual ~StreamingState();
 };
 

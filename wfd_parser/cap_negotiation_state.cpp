@@ -34,7 +34,7 @@ namespace wfd {
 
 class M3Handler final : public SequencedMessageSender {
  public:
-  M3Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  using SequencedMessageSender::SequencedMessageSender;
 
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override;
@@ -43,16 +43,12 @@ class M3Handler final : public SequencedMessageSender {
 
 class M4Handler final : public SequencedMessageSender {
  public:
-  M4Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  using SequencedMessageSender::SequencedMessageSender;
 
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override;
   virtual bool HandleReply(Reply* reply) override;
 };
-
-M3Handler::M3Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-  : SequencedMessageSender(sender, manager, observer) {
-}
 
 std::unique_ptr<TypedMessage> M3Handler::CreateMessage() {
   auto get_param =
@@ -80,10 +76,6 @@ bool M3Handler::HandleReply(Reply* reply) {
   return true;
 }
 
-M4Handler::M4Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-  : SequencedMessageSender(sender, manager, observer) {
-}
-
 std::unique_ptr<TypedMessage> M4Handler::CreateMessage() {
   auto set_param =
       std::make_shared<WFD::SetParameter>("rtsp://localhost/wfd1.0");
@@ -101,11 +93,10 @@ bool M4Handler::HandleReply(Reply* reply) {
   return (reply->GetResponseCode() == 200);
 }
 
-CapNegotiationState::CapNegotiationState(Peer::Delegate* sender, MediaManager* manager,
-    MessageHandler::Observer* observer)
-  : MessageSequenceHandler(sender, manager, observer) {
-  AddSequencedHandler(new M3Handler(sender, manager, this));
-  AddSequencedHandler(new M4Handler(sender, manager, this));
+CapNegotiationState::CapNegotiationState(const InitParams &init_params)
+  : MessageSequenceHandler(init_params) {
+  AddSequencedHandler(new M3Handler(init_params));
+  AddSequencedHandler(new M4Handler(init_params));
 }
 
 CapNegotiationState::~CapNegotiationState() {

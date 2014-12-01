@@ -33,9 +33,7 @@ namespace wfd {
 
 class M5Handler final : public SequencedMessageSender {
  public:
-  M5Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : SequencedMessageSender(sender, manager, observer) {
-  }
+  using SequencedMessageSender::SequencedMessageSender;
 
  private:
   virtual std::unique_ptr<TypedMessage> CreateMessage() override {
@@ -55,8 +53,8 @@ class M5Handler final : public SequencedMessageSender {
 
 class M6Handler final : public MessageReceiver<TypedMessage::M6> {
  public:
-  M6Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M6>(sender, manager, observer) {
+  M6Handler(const InitParams& init_params)
+    : MessageReceiver<TypedMessage::M6>(init_params) {
   }
 
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
@@ -69,8 +67,8 @@ class M6Handler final : public MessageReceiver<TypedMessage::M6> {
   }
 };
 
-M7Handler::M7Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-  : MessageReceiver<TypedMessage::M7>(sender, manager, observer) {
+M7Handler::M7Handler(const InitParams& init_params)
+  : MessageReceiver<TypedMessage::M7>(init_params) {
 }
 
 bool M7Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
@@ -87,8 +85,8 @@ bool M7Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   return true;
 }
 
-M8Handler::M8Handler(Peer::Delegate *sender, MediaManager* manager, Observer* observer)
-  : MessageReceiver<TypedMessage::M8>(sender, manager, observer) {
+M8Handler::M8Handler(const InitParams& init_params)
+  : MessageReceiver<TypedMessage::M8>(init_params) {
 }
 
 bool M8Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
@@ -99,14 +97,13 @@ bool M8Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   return true;
 }
 
-WfdSessionState::WfdSessionState(Peer::Delegate *sender, MediaManager* manager,
-    MessageHandler::Observer* observer)
-  : MessageSequenceWithOptionalSetHandler(sender, manager, observer) {
-  AddSequencedHandler(new M5Handler(sender, manager, this));
-  AddSequencedHandler(new M6Handler(sender, manager, this));
-  AddSequencedHandler(new M7Handler(sender, manager, this));
+WfdSessionState::WfdSessionState(const InitParams& init_params)
+  : MessageSequenceWithOptionalSetHandler(init_params) {
+  AddSequencedHandler(new M5Handler(init_params));
+  AddSequencedHandler(new M6Handler(init_params));
+  AddSequencedHandler(new M7Handler(init_params));
 
-  AddOptionalHandler(new M8Handler(sender, manager, this));
+  AddOptionalHandler(new M8Handler(init_params));
 }
 
 WfdSessionState::~WfdSessionState() {

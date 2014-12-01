@@ -45,6 +45,13 @@ class MessageHandler {
    protected:
     virtual ~Observer() {}
   };
+
+  struct InitParams {
+    Peer::Delegate* sender;
+    MediaManager* manager;
+    Observer* observer;
+  };
+
   virtual ~MessageHandler() {}
 
   virtual void Start() = 0;
@@ -56,17 +63,21 @@ class MessageHandler {
   virtual bool CanHandle(TypedMessage* message) const = 0;
   virtual void Handle(std::unique_ptr<TypedMessage> message) = 0;
 
-  void set_observer(Observer* observer) { observer_ = observer; }
+  void set_observer(Observer* observer) {
+    assert(observer);
+    observer_ = observer;
+  }
 
 protected:
-  MessageHandler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : sender_(sender),
-      manager_(manager),
-      observer_(observer) {
-    assert(sender);
-    assert(manager);
-    assert(observer);
+  explicit MessageHandler(const InitParams& init_params)
+    : sender_(init_params.sender),
+      manager_(init_params.manager),
+      observer_(init_params.observer) {
+    assert(sender_);
+    assert(manager_);
+    assert(observer_);
   }
+
   Peer::Delegate* sender_;
   MediaManager* manager_;
   Observer* observer_;
@@ -77,9 +88,7 @@ protected:
 class MessageSequenceHandler : public MessageHandler,
                                public MessageHandler::Observer {
  public:
-  MessageSequenceHandler(Peer::Delegate* sender,
-                         MediaManager* manager,
-                         MessageHandler::Observer* observer);
+  explicit MessageSequenceHandler(const InitParams& init_params);
   virtual ~MessageSequenceHandler();
   virtual void Start() override;
   virtual void Reset() override;
@@ -102,9 +111,7 @@ class MessageSequenceHandler : public MessageHandler,
 
 class MessageSequenceWithOptionalSetHandler : public MessageSequenceHandler {
  public:
-  MessageSequenceWithOptionalSetHandler(Peer::Delegate* sender,
-      MediaManager* manager,
-      MessageHandler::Observer* observer);
+  explicit MessageSequenceWithOptionalSetHandler(const InitParams& init_params);
   virtual ~MessageSequenceWithOptionalSetHandler();
   virtual void Start() override;
   virtual void Reset() override;
@@ -136,8 +143,8 @@ class MessageReceiver : public MessageHandler {
   static_assert(type != TypedMessage::Reply,
                 "MessageSender class should be used");
 
-  MessageReceiver(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : MessageHandler(sender, manager, observer),
+  explicit MessageReceiver(const InitParams& init_params)
+    : MessageHandler(init_params),
       wait_for_message_(false) {
   }
   virtual ~MessageReceiver() {}
@@ -174,7 +181,7 @@ class MessageReceiver : public MessageHandler {
 
 class MessageSender : public MessageHandler {
  public:
-  MessageSender(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  explicit MessageSender(const InitParams& init_params);
   virtual ~MessageSender();
 
  protected:
@@ -186,7 +193,6 @@ class MessageSender : public MessageHandler {
   virtual bool CanHandle(TypedMessage* message) const override;
   virtual void Handle(std::unique_ptr<TypedMessage> message) override;
 
-  TypedMessage::Type type_;
   std::queue<int> cseq_queue_;
 };
 
@@ -209,7 +215,7 @@ class TypedMessageSender : public MessageSender {
 // To be used for sequensed senders.
 class SequencedMessageSender : public MessageSender {
  public:
-  SequencedMessageSender(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  explicit SequencedMessageSender(const InitParams& init_params);
   virtual ~SequencedMessageSender();
 
  protected:

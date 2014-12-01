@@ -30,14 +30,13 @@ namespace wfd {
 // Includes M5, M6, M7 messages handling and optionally can handle M3, M4, M8
 class WfdSessionState : public MessageSequenceWithOptionalSetHandler {
  public:
-  WfdSessionState(Peer::Delegate* sender, MediaManager* manager,
-      MessageHandler::Observer* observer);
+  WfdSessionState(const InitParams& init_params);
   virtual ~WfdSessionState();
 };
 
 class M8Handler final : public MessageReceiver<TypedMessage::M8> {
  public:
-  M8Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  M8Handler(const InitParams& init_params);
 
  private:
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override;
@@ -45,7 +44,7 @@ class M8Handler final : public MessageReceiver<TypedMessage::M8> {
 
 class M7Handler final : public MessageReceiver<TypedMessage::M7> {
  public:
-  M7Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer);
+  M7Handler(const InitParams& init_params);
 
  private:
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override;

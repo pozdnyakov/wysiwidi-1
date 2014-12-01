@@ -54,8 +54,8 @@ class M1Handler final : public SequencedMessageSender {
 
 class M2Handler final : public MessageReceiver<TypedMessage::M2> {
  public:
-  M2Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M2>(sender, manager, observer) {
+  M2Handler(const InitParams& init_params)
+    : MessageReceiver<TypedMessage::M2>(init_params) {
   }
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
     auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
@@ -74,12 +74,10 @@ class M2Handler final : public MessageReceiver<TypedMessage::M2> {
   }
 };
 
-InitState::InitState(Peer::Delegate* sender,
-                     MediaManager* manager,
-                     MessageHandler::Observer* observer)
-  : MessageSequenceHandler(sender, manager, observer) {
-  AddSequencedHandler(new M1Handler(sender, manager, this));
-  AddSequencedHandler(new M2Handler(sender, manager, this));
+InitState::InitState(const InitParams& init_params)
+  : MessageSequenceHandler(init_params) {
+  AddSequencedHandler(new M1Handler(init_params));
+  AddSequencedHandler(new M2Handler(init_params));
 }
 
 InitState::~InitState() {

@@ -28,11 +28,8 @@ namespace wfd {
 
 int MessageHandler::send_cseq_ = 1;
 
-MessageSequenceHandler::MessageSequenceHandler(
-    Peer::Delegate* sender,
-    MediaManager* manager,
-    MessageHandler::Observer* observer)
-  : MessageHandler(sender, manager, observer),
+MessageSequenceHandler::MessageSequenceHandler(const InitParams& init_params)
+  : MessageHandler(init_params),
     current_handler_(nullptr) {
 }
 
@@ -78,6 +75,7 @@ void MessageSequenceHandler::AddSequencedHandler(MessageHandler* handler) {
   assert(handlers_.end() == std::find(
       handlers_.begin(), handlers_.end(), handler));
   handlers_.push_back(handler);
+  handler->set_observer(this);
 }
 
 void MessageSequenceHandler::OnCompleted(MessageHandler* handler) {
@@ -102,8 +100,8 @@ void MessageSequenceHandler::OnError(MessageHandler* handler) {
 }
 
 MessageSequenceWithOptionalSetHandler::MessageSequenceWithOptionalSetHandler(
-    Peer::Delegate* sender, MediaManager* manager, MessageHandler::Observer* observer)
-  : MessageSequenceHandler(sender, manager, observer) {
+    const InitParams& init_params)
+  : MessageSequenceHandler(init_params) {
 }
 
 MessageSequenceWithOptionalSetHandler::~MessageSequenceWithOptionalSetHandler() {
@@ -183,6 +181,7 @@ void MessageSequenceWithOptionalSetHandler::AddOptionalHandler(
   assert(optional_handlers_.end() == std::find(
       optional_handlers_.begin(), optional_handlers_.end(), handler));
   optional_handlers_.push_back(handler);
+  handler->set_observer(this);
 }
 
 void MessageSequenceWithOptionalSetHandler::OnCompleted(MessageHandler* handler) {
@@ -201,8 +200,8 @@ void MessageSequenceWithOptionalSetHandler::OnError(MessageHandler* handler) {
   observer_->OnError(this);
 }
 
-MessageSender::MessageSender(Peer::Delegate *sender, MediaManager* manager, Observer* observer)
-  : MessageHandler(sender, manager, observer) {
+MessageSender::MessageSender(const InitParams& init_params)
+  : MessageHandler(init_params) {
 }
 
 MessageSender::~MessageSender() {
@@ -245,9 +244,8 @@ void MessageSender::Handle(std::unique_ptr<TypedMessage> message) {
   }
 }
 
-SequencedMessageSender::SequencedMessageSender
-    (Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-  : MessageSender(sender, manager, observer),
+SequencedMessageSender::SequencedMessageSender(const InitParams &init_params)
+  : MessageSender(init_params),
     to_be_send_(nullptr) {
 }
 

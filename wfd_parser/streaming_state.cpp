@@ -32,8 +32,8 @@ namespace wfd {
 
 class M9Handler final : public MessageReceiver<TypedMessage::M9> {
  public:
-  M9Handler(Peer::Delegate* sender, MediaManager* manager, Observer* observer)
-    : MessageReceiver<TypedMessage::M9>(sender, manager, observer) {
+  M9Handler(const InitParams& init_params)
+    : MessageReceiver<TypedMessage::M9>(init_params) {
   }
 
   virtual bool HandleMessage(std::unique_ptr<TypedMessage> message) override {
@@ -51,13 +51,12 @@ class M9Handler final : public MessageReceiver<TypedMessage::M9> {
   }
 };
 
-StreamingState::StreamingState(Peer::Delegate *sender, MediaManager* manager,
-    MessageHandler::Observer* observer)
-  : MessageSequenceWithOptionalSetHandler(sender, manager, observer) {
-  AddSequencedHandler(new M8Handler(sender, manager, this));
+StreamingState::StreamingState(const InitParams& init_params)
+  : MessageSequenceWithOptionalSetHandler(init_params) {
+  AddSequencedHandler(new M8Handler(init_params));
 
-  AddOptionalHandler(new M7Handler(sender, manager, this));
-  AddOptionalHandler(new M9Handler(sender, manager, this));
+  AddOptionalHandler(new M7Handler(init_params));
+  AddOptionalHandler(new M9Handler(init_params));
 }
 
 StreamingState::~StreamingState() {
