@@ -88,9 +88,9 @@ class SourceStateMachine : public MessageSequenceHandler{
 };
 
 // An aux class to handle input buffer.
-class RTSPInputReceiver {
+class RTSPInputHandler {
  protected:
-  virtual ~RTSPInputReceiver() {}
+  virtual ~RTSPInputHandler() {}
 
   void InputReceived(const std::string& input);
   virtual void MessageParsed(WFD::MessagePtr message) = 0;
@@ -103,7 +103,7 @@ class RTSPInputReceiver {
   std::string rtsp_recieve_buffer_;
 };
 
-void RTSPInputReceiver::InputReceived(const std::string& input) {
+void RTSPInputHandler::InputReceived(const std::string& input) {
   rtsp_recieve_buffer_ += input;
   std::string buffer;
 
@@ -122,7 +122,7 @@ void RTSPInputReceiver::InputReceived(const std::string& input) {
   }
 }
 
-bool RTSPInputReceiver::GetHeader(std::string& header) {
+bool RTSPInputHandler::GetHeader(std::string& header) {
   size_t eom = rtsp_recieve_buffer_.find("\r\n\r\n");
   if (eom == std::string::npos) {
     rtsp_recieve_buffer_.clear();
@@ -134,7 +134,7 @@ bool RTSPInputReceiver::GetHeader(std::string& header) {
   return true;
 }
 
-bool RTSPInputReceiver::GetPayload(std::string& payload, unsigned content_length) {
+bool RTSPInputHandler::GetPayload(std::string& payload, unsigned content_length) {
   if (rtsp_recieve_buffer_.size() < content_length)
       return false;
 
@@ -143,15 +143,15 @@ bool RTSPInputReceiver::GetPayload(std::string& payload, unsigned content_length
   return true;
 }
 
-class SourceImpl final : public Source, public RTSPInputReceiver {
+class SourceImpl final : public Source, public RTSPInputHandler {
  public:
   SourceImpl(Delegate* delegate, MediaManager* mng);
 
  private:
   // Source implementation.
   virtual void Start() override;
-  virtual void MessageReceived(const std::string& message) override;
-
+  virtual void RTSPDataReceived(const std::string& message) override;
+  // RTSPInputHandler
   virtual void MessageParsed(WFD::MessagePtr message) override;
 
   std::unique_ptr<MessageHandler> state_machine_;
@@ -165,7 +165,7 @@ void SourceImpl::Start() {
   state_machine_->Start();
 }
 
-void SourceImpl::MessageReceived(const std::string& message) {
+void SourceImpl::RTSPDataReceived(const std::string& message) {
   InputReceived(message);
 }
 

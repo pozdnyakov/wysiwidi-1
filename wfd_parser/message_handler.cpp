@@ -219,7 +219,7 @@ void MessageSender::Send(std::unique_ptr<TypedMessage> message) {
     return;
   }
   cseq_queue_.push(message->cseq()); // TODO : Add timeout check for reply.
-  sender_->SendMessage(message->message()->to_string());
+  sender_->SendRTSPData(message->message()->to_string());
 }
 
 bool MessageSender::CanHandle(TypedMessage* message) const {

@@ -46,7 +46,7 @@ class M9Handler final : public MessageReceiver<TypedMessage::M9> {
     auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
     reply->header().set_cseq(message->cseq());
     manager_->Pause();
-    sender_->SendMessage(reply->to_string());
+    sender_->SendRTSPData(reply->to_string());
     return true;
   }
 };

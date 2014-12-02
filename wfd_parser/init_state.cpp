@@ -69,7 +69,7 @@ class M2Handler final : public MessageReceiver<TypedMessage::M2> {
     supported_methods.push_back(WFD::TEARDOWN);
     reply->header().set_supported_methods(supported_methods);
     reply->header().set_cseq(message->message()->header().cseq());
-    sender_->SendMessage(reply->to_string());
+    sender_->SendRTSPData(reply->to_string());
     return true;
   }
 };

@@ -62,7 +62,7 @@ class M6Handler final : public MessageReceiver<TypedMessage::M6> {
     reply->header().set_cseq(message->cseq());
     // todo: generate unique session id
     reply->header().set_session("abcdefg123456");
-    sender_->SendMessage(reply->to_string());
+    sender_->SendRTSPData(reply->to_string());
     return true;
   }
 };
@@ -81,7 +81,7 @@ bool M7Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
   reply->header().set_cseq(message->cseq());
   manager_->Play();
-  sender_->SendMessage(reply->to_string());
+  sender_->SendRTSPData(reply->to_string());
   return true;
 }
 
@@ -93,7 +93,7 @@ bool M8Handler::HandleMessage(std::unique_ptr<TypedMessage> message) {
   auto reply = std::unique_ptr<WFD::Reply>(new WFD::Reply(200));
   reply->header().set_cseq(message->cseq());
   manager_->Teardown(); // FIXME : make proper reset.
-  sender_->SendMessage(reply->to_string());
+  sender_->SendRTSPData(reply->to_string());
   return true;
 }
 

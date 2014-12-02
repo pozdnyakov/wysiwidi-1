@@ -32,13 +32,13 @@ class Peer {
  public:
   class Delegate {
    public:
-    virtual void SendMessage(const std::string& message) = 0;
+    virtual void SendRTSPData(const std::string& data) = 0;
    protected:
     virtual ~Delegate() {}
   };
   virtual ~Peer() {}
   virtual void Start() = 0;
-  virtual void MessageReceived(const std::string& message) = 0;
+  virtual void RTSPDataReceived(const std::string& data) = 0;
 };
 
 class Source : public Peer {
