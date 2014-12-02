@@ -46,8 +46,8 @@
 
 MiracSink::SetParameterType MiracSink::get_method(std::shared_ptr<WFD::SetParameter> set_param)
 {
-    try {
-        auto method = set_param->payload().get_property (WFD::PropertyType::WFD_TRIGGER_METHOD);
+  auto method = set_param->payload().get_property (WFD::PropertyType::WFD_TRIGGER_METHOD);
+  if (method) {
         auto trigger_method = std::static_pointer_cast<WFD::TriggerMethod> (method);
         switch (trigger_method->method()) {
             case WFD::TriggerMethod::SETUP:
@@ -61,7 +61,7 @@ MiracSink::SetParameterType MiracSink::get_method(std::shared_ptr<WFD::SetParame
             default:
                 assert(false);
         }
-    } catch (std::out_of_range) {
+    } else {
         return M4;
     }
 }
