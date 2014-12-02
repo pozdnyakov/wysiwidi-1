@@ -71,6 +71,7 @@ std::unique_ptr<TypedMessage> CreateTypedMessage(WFD::MessagePtr message) {
 }
 
 }
+
 class SourceStateMachine : public MessageSequenceHandler{
  public:
    SourceStateMachine(const InitParams& init_params)
@@ -86,43 +87,24 @@ class SourceStateMachine : public MessageSequenceHandler{
    virtual void OnError(MessageHandler* handler) override {}
 };
 
-template <class T>
-class PeerImpl : public T
-{
- public:
-  explicit PeerImpl(MessageSequenceHandler* state_machine);
-  virtual ~PeerImpl();
+// An aux class to handle input buffer.
+class RTSPInputReceiver {
+ protected:
+  virtual ~RTSPInputReceiver() {}
+
+  void InputReceived(const std::string& input);
+  virtual void MessageParsed(WFD::MessagePtr message) = 0;
 
  private:
-  // Source implementation.
-  virtual void Start() override;
-  virtual void MessageReceived(const std::string& message) override;
-
   bool GetHeader(std::string& header);
   bool GetPayload(std::string& payload, unsigned content_length);
 
-  std::unique_ptr<MessageSequenceHandler> state_machine_;
   WFD::Driver driver_;
   std::string rtsp_recieve_buffer_;
 };
 
-template <class T>
-PeerImpl<T>::PeerImpl(MessageSequenceHandler* state_machine)
-  : state_machine_(state_machine) {
-}
-
-template <class T>
-PeerImpl<T>::~PeerImpl() {
-}
-
-template <class T>
-void PeerImpl<T>::Start() {
-  state_machine_->Start();
-}
-
-template <class T>
-void PeerImpl<T>::MessageReceived(const std::string& message) {
-  rtsp_recieve_buffer_ += message;
+void RTSPInputReceiver::InputReceived(const std::string& input) {
+  rtsp_recieve_buffer_ += input;
   std::string buffer;
 
   while(GetHeader(buffer)) {
@@ -136,14 +118,11 @@ void PeerImpl<T>::MessageReceived(const std::string& message) {
     uint content_length = rtsp_message->header().content_length();
     if (content_length && GetPayload(buffer, content_length))
       driver_.parse_payload(buffer);
-      auto typed_message = CreateTypedMessage(rtsp_message);
-      if (typed_message)
-        state_machine_->Handle(std::move(typed_message));
+      MessageParsed(rtsp_message);
   }
 }
 
-template <class T>
-bool PeerImpl<T>::GetHeader(std::string& header) {
+bool RTSPInputReceiver::GetHeader(std::string& header) {
   size_t eom = rtsp_recieve_buffer_.find("\r\n\r\n");
   if (eom == std::string::npos) {
     rtsp_recieve_buffer_.clear();
@@ -155,8 +134,7 @@ bool PeerImpl<T>::GetHeader(std::string& header) {
   return true;
 }
 
-template <class T>
-bool PeerImpl<T>::GetPayload(std::string& payload, unsigned content_length) {
+bool RTSPInputReceiver::GetPayload(std::string& payload, unsigned content_length) {
   if (rtsp_recieve_buffer_.size() < content_length)
       return false;
 
@@ -165,8 +143,40 @@ bool PeerImpl<T>::GetPayload(std::string& payload, unsigned content_length) {
   return true;
 }
 
+class SourceImpl final : public Source, public RTSPInputReceiver {
+ public:
+  SourceImpl(Delegate* delegate, MediaManager* mng);
+
+ private:
+  // Source implementation.
+  virtual void Start() override;
+  virtual void MessageReceived(const std::string& message) override;
+
+  virtual void MessageParsed(WFD::MessagePtr message) override;
+
+  std::unique_ptr<MessageHandler> state_machine_;
+};
+
+SourceImpl::SourceImpl(Delegate* delegate, MediaManager* mng)
+  : state_machine_(new SourceStateMachine(delegate, mng)) {
+}
+
+void SourceImpl::Start() {
+  state_machine_->Start();
+}
+
+void SourceImpl::MessageReceived(const std::string& message) {
+  InputReceived(message);
+}
+
+void SourceImpl::MessageParsed(WFD::MessagePtr message) {
+  auto typed_message = CreateTypedMessage(message);
+  if (typed_message)
+    state_machine_->Handle(std::move(typed_message));
+}
+
 Source* Source::Create(Delegate* delegate, MediaManager* mng) {
-  return new PeerImpl<Source>(new SourceStateMachine(delegate, mng));
+  return new SourceImpl(delegate, mng);
 }
 
 }  // namespace wfd
