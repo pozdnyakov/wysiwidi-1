@@ -60,8 +60,8 @@ class M7Sender final : public SequencedMessageSender {
     using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<Message> CreateMessage() override {
-    Play* play = new Play(manager_->PresentationUrl());
-    play->header().set_session(manager_->Session());
+    Play* play = new Play(ToSinkMediaManager(manager_)->GetPresentationUrl());
+    play->header().set_session(ToSinkMediaManager(manager_)->GetSession());
     play->header().set_cseq (send_cseq_++);
     return std::unique_ptr<Message>(play);
   }
@@ -89,14 +89,16 @@ class M8Sender final : public SequencedMessageSender {
   using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<Message> CreateMessage() override {
-    Teardown* teardown = new Teardown(manager_->PresentationUrl());
-    teardown->header().set_session(manager_->Session());
+    Teardown* teardown = new Teardown(
+        ToSinkMediaManager(manager_)->GetPresentationUrl());
+    teardown->header().set_session(ToSinkMediaManager(manager_)->GetSession());
     teardown->header().set_cseq (send_cseq_++);
     return std::unique_ptr<Message>(teardown);
   }
 
   virtual bool HandleReply(Reply* reply) override {
-    if (!manager_->Session().empty() && (reply->response_code() == 200)) {
+    if (!ToSinkMediaManager(manager_)->GetSession().empty() &&
+        (reply->response_code() == 200)) {
       manager_->Teardown();
       return true;
     }
@@ -115,8 +117,8 @@ class M9Sender final : public SequencedMessageSender {
     using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<Message> CreateMessage() override {
-    Pause* pause = new Pause(manager_->PresentationUrl());
-    pause->header().set_session(manager_->Session());
+    Pause* pause = new Pause(ToSinkMediaManager(manager_)->GetPresentationUrl());
+    pause->header().set_session(ToSinkMediaManager(manager_)->GetSession());
     pause->header().set_cseq (send_cseq_++);
     return std::unique_ptr<Message>(pause);
   }

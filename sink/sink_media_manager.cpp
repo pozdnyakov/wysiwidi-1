@@ -41,23 +41,15 @@ bool SinkMediaManager::IsPaused() const {
   return gst_pipeline_->IsPaused();
 }
 
-void SinkMediaManager::SetSinkRtpPorts(int port1, int port2) {
-}
-
 std::pair<int,int> SinkMediaManager::SinkRtpPorts() const {
   return std::pair<int,int>(gst_pipeline_->sink_udp_port(), 0);
 }
-
-int SinkMediaManager::SourceRtpPort() const {
-  return 0;
-}
-
 
 void SinkMediaManager::SetPresentationUrl(const std::string& url) {
   presentation_url_ = url;
 }
 
-std::string SinkMediaManager::PresentationUrl() const {
+std::string SinkMediaManager::GetPresentationUrl() const {
   return presentation_url_;
 }
 
@@ -65,6 +57,6 @@ void SinkMediaManager::SetSession(const std::string& session) {
   session_ = session;
 }
 
-std::string SinkMediaManager::Session() const {
+std::string SinkMediaManager::GetSession() const {
   return session_;
 }

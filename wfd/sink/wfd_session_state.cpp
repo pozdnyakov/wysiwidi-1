@@ -38,7 +38,7 @@ class M6Handler final : public SequencedMessageSender {
     using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<Message> CreateMessage() override {
-    auto setup = new Setup(manager_->PresentationUrl());
+    auto setup = new Setup(ToSinkMediaManager(manager_)->GetPresentationUrl());
     auto transport = new TransportHeader();
     // we assume here that there is no coupled secondary sink
     transport->set_client_port(manager_->SinkRtpPorts().first);
@@ -53,7 +53,7 @@ class M6Handler final : public SequencedMessageSender {
   virtual bool HandleReply(Reply* reply) override {
     const std::string& session_id = reply->header().session();
     if(reply->response_code() == 200 && !session_id.empty()) {
-      manager_->SetSession(session_id);
+      ToSinkMediaManager(manager_)->SetSession(session_id);
       return true;
     }
 
@@ -66,8 +66,8 @@ class M7Handler final : public SequencedMessageSender {
     using SequencedMessageSender::SequencedMessageSender;
  private:
   virtual std::unique_ptr<Message> CreateMessage() override {
-    Play* play = new Play(manager_->PresentationUrl());
-    play->header().set_session(manager_->Session());
+    Play* play = new Play(ToSinkMediaManager(manager_)->GetPresentationUrl());
+    play->header().set_session(ToSinkMediaManager(manager_)->GetSession());
     play->header().set_cseq(send_cseq_++);
     play->header().set_require_wfd_support(true);
 

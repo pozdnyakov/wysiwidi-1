@@ -121,7 +121,7 @@ std::unique_ptr<Reply> M4Handler::HandleMessage(Message* message) {
 
   // presentation URL is the only thing we care about
   // support for other parameters can be added later as needed
-  manager_->SetPresentationUrl(property->presentation_url_1());
+  ToSinkMediaManager(manager_)->SetPresentationUrl(property->presentation_url_1());
   return std::unique_ptr<Reply>(new Reply(200));
 }
 

@@ -70,7 +70,8 @@ bool M3Handler::HandleReply(Reply* reply) {
   auto prop = reply->payload().get_property(WFD_CLIENT_RTP_PORTS);
   auto ports = static_cast<ClientRtpPorts*>(prop.get());
   assert(ports);
-  manager_->SetSinkRtpPorts(ports->rtp_port_0(), ports->rtp_port_1());
+  ToSourceMediaManager(manager_)->SetSinkRtpPorts(ports->rtp_port_0(),
+                                                  ports->rtp_port_1());
   return true;
 }
 
