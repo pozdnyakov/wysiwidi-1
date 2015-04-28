@@ -33,7 +33,7 @@ namespace rtsp {
 BaseLexer::~BaseLexer() {
 }
 
-int BaseLexer::yylex(Parser::semantic_type *lval) {
+int BaseLexer::yylex(Parser::semantic_type* lval) {
   yylval = lval;
   return( yylex() );
 }
@@ -56,7 +56,7 @@ Scanner::Scanner(std::istream* in, std::unique_ptr<Message>& message) {
 Scanner::~Scanner() {
 }
 
-int Scanner::yylex(Parser::semantic_type *lval) {
+int Scanner::yylex(Parser::semantic_type* lval) {
   return lexer_->yylex(lval);
 }
 

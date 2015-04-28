@@ -154,25 +154,25 @@ ERROR ({DIGIT}){3}
 
 ^[[:alpha:]][[:alnum:]\-\_]*":" {
     BEGIN(MATCH_STRING_STATE);
-    yylval->sval = new std::string(yytext, yyleng - 1);
+    yylval->build(std::string(yytext, yyleng - 1));
     return token::WFD_HEADER;
   }
 
 <SESSION_STATE>[^ ;\t\r\n]+ {
     BEGIN(INITIAL);
-    yylval->sval = new std::string(yytext, yyleng);
+    yylval->build(std::string(yytext, yyleng));
     return token::WFD_SESSION_ID;
   }
 
 <MATCH_RESPONSE_CODE_STATE>{DIGITS} {
     BEGIN(MATCH_STRING_STATE);
-    yylval->nval = atoi(yytext);
+    yylval->build(atoi(yytext));
     return token::WFD_RESPONSE_CODE;
   }
 
 <MATCH_STRING_STATE>[^ \r\n][^\r\n]+/"\r\n" {
     BEGIN(INITIAL);
-    yylval->sval = new std::string(yytext);
+    yylval->build(std::string(yytext));
     return token::WFD_STRING;
   }
 
@@ -209,25 +209,25 @@ ERROR ({DIGIT}){3}
   }
 
 <MATCH_PRESENTATION_URL>"rtsp://"[^ \t\n]+{IPADDRESS}"/wfd1.0/streamid=0" {
-    yylval->sval = new std::string(yytext);
+    yylval->build(std::string(yytext));
     return token::WFD_PRESENTATION_URL_0;
   }
 
 <MATCH_PRESENTATION_URL>"rtsp://"[^ \t\n]+{IPADDRESS}"/wfd1.0/streamid=1" {
-    yylval->sval = new std::string(yytext);
+    yylval->build(std::string(yytext));
     return token::WFD_PRESENTATION_URL_1;
   }
 
 <CONTENT_TYPE_STATE>[-[:alnum:]]+\/[-[:alnum:]]+ {
     BEGIN(INITIAL);
-    yylval->sval = new std::string(yytext);
+    yylval->build(std::string(yytext));
     return token::WFD_MIME;
   }
 
 {DIGITS} {
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 10);
+    yylval->build(strtoull(str.c_str(), NULL, 10));
     if (errno == ERANGE) {
       // todo: handle error
     }
@@ -241,7 +241,7 @@ ERROR ({DIGIT}){3}
 
   /* GET_PARAMETER rtsp://localhost/wfd1.0 RTSP/1.0 */
 "rtsp://"[^ \t\n]+ {
-    yylval->sval = new std::string(yytext);
+    yylval->build(std::string(yytext));
     return token::WFD_REQUEST_URI;
   }
 

@@ -43,7 +43,7 @@ void Driver::Parse(const std::string& input, std::unique_ptr<Message>& message) 
 
   // todo: remove, just for testing
   //scanner_->set_debug(1);
-  //parser_->set_debug_level(1);
+  parser_->set_debug_level(1);
 
   parser_->parse();
 }

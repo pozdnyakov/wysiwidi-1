@@ -60,7 +60,7 @@ using AudioModes = std::bitset<32>;
 struct AudioCodec {
   AudioCodec(AudioFormats format, const AudioModes& modes, unsigned latency)
   : format(format), modes(modes), latency(latency) {}
-
+  AudioCodec() = default;
   AudioFormats format;
   AudioModes modes;
   unsigned latency;

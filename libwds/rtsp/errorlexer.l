@@ -130,14 +130,14 @@ CRLF {CR}{LF}
   }
 
 ^[[:alpha:]][[:alnum:]\-\_]* {
-    yylval->sval = new std::string(yytext, yyleng);
+    yylval->build(std::string(yytext, yyleng));
     return token::WFD_GENERIC_PROPERTY_ERROR;
   }
 
 {DIGITS} {
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 10);
+    yylval->build(strtoull(str.c_str(), NULL, 10));
     if (errno == ERANGE) {
       // todo: handle error
     }

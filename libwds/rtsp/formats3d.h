@@ -49,6 +49,8 @@ struct H264Codec3d {
       max_hres_(max_hres),
       max_vres_(max_vres) {}
 
+  H264Codec3d() = default;
+
   std::string ToString() const;
 
   unsigned char profile_;

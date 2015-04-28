@@ -64,8 +64,8 @@ class UIBCCapability: public Property {
   UIBCCapability();
   UIBCCapability(const std::vector<InputCategory>& input_categories,
       const std::vector<InputType>& generic_capabilities,
-      const std::vector<DetailedCapability> hidc_capabilities,
-      int tcp_port);
+      const std::vector<DetailedCapability>& hidc_capabilities,
+      unsigned tcp_port);
   ~UIBCCapability() override;
 
   std::string ToString() const override;
@@ -75,7 +75,7 @@ class UIBCCapability: public Property {
   std::vector<InputCategory> input_categories_;
   std::vector<InputType> generic_capabilities_;
   std::vector<DetailedCapability> hidc_capabilities_;
-  int tcp_port_;
+  unsigned tcp_port_;
   bool has_capabilities_;
 };
 

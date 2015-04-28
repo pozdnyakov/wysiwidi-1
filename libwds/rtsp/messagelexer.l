@@ -110,13 +110,13 @@ ERROR ({DIGIT}){3}
 
 <NUM_AS_HEX_MODE>{DIGITS} {
     if (yyleng > 16) {
-      yylval->sval = new std::string(yytext);
+      yylval->build<std::string>(yytext);
       return token::WFD_STRING;
     }
 
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 16);
+    yylval->build<unsigned long long>(strtoull(str.c_str(), NULL, 16));
     if (errno == ERANGE) {
       // todo: handle error
     }
@@ -125,13 +125,13 @@ ERROR ({DIGIT}){3}
 
 <NUM_AS_HEX_MODE>{HEXDIGITS} {
     if (yyleng > 16) {
-      yylval->sval = new std::string(yytext);
+      yylval->build<std::string>(yytext);
       return token::WFD_STRING;
     }
 
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 16);
+    yylval->build<unsigned long long>(strtoull(str.c_str(), NULL, 16));
     if (errno == ERANGE) {
       // todo: handle error
     }
@@ -228,14 +228,14 @@ ERROR ({DIGIT}){3}
 
 ^[[:alpha:]][[:alnum:]\-\_]* {
     BEGIN(MATCH_STRING_STATE);
-    yylval->sval = new std::string(yytext, yyleng);
+    yylval->build<std::string>(std::string(yytext, yyleng));
     return token::WFD_GENERIC_PROPERTY;
   }
 
 {DIGITS} {
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 10);
+    yylval->build<unsigned long long>(strtoull(str.c_str(), NULL, 10));
     if (errno == ERANGE) {
       // todo: handle error
     }
@@ -245,7 +245,7 @@ ERROR ({DIGIT}){3}
 {HEXDIGITS} {
     std::string str(yytext, yyleng);
     str += '\0';
-    yylval->nval = strtoull(str.c_str(), NULL, 16);
+    yylval->build<unsigned long long>(strtoull(str.c_str(), NULL, 16));
     if (errno == ERANGE) {
       // todo: handle error
     }
@@ -254,7 +254,7 @@ ERROR ({DIGIT}){3}
 
 <MATCH_STRING_STATE>[^ :\r\n][^\r\n]+/"\r\n" {
     BEGIN(INITIAL);
-    yylval->sval = new std::string(yytext);
+    yylval->build<std::string>(yytext);
     return token::WFD_STRING;
   }
 
@@ -291,12 +291,12 @@ ERROR ({DIGIT}){3}
   }
 
 <MATCH_PRESENTATION_URL>"rtsp://"[^ \t\n]+{IPADDRESS}"/wfd1.0/streamid=0" {
-    yylval->sval = new std::string(yytext);
+    yylval->build<std::string>(yytext);
     return token::WFD_PRESENTATION_URL_0;
   }
 
 <MATCH_PRESENTATION_URL>"rtsp://"[^ \t\n]+{IPADDRESS}"/wfd1.0/streamid=1" {
-    yylval->sval = new std::string(yytext);
+    yylval->build<std::string>(yytext);
     return token::WFD_PRESENTATION_URL_1;
   }
 

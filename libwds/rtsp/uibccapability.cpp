@@ -76,11 +76,10 @@ UIBCCapability::UIBCCapability()
   : Property(WFD_UIBC_CAPABILITY, true) {
 }
 
-UIBCCapability::UIBCCapability(
-    const std::vector<InputCategory>& input_categories,
+UIBCCapability::UIBCCapability(const std::vector<InputCategory>& input_categories,
     const std::vector<InputType>& generic_capabilities,
-    const std::vector<DetailedCapability> hidc_capabilities,
-    int tcp_port)
+    const std::vector<DetailedCapability>& hidc_capabilities,
+    unsigned tcp_port)
   : Property(WFD_UIBC_CAPABILITY),
     input_categories_(input_categories),
     generic_capabilities_(generic_capabilities),
